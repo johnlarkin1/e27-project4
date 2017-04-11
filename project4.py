@@ -11,6 +11,7 @@ import cv2
 import sklearn
 import tensorflow as tf
 import sklearn.ensemble as skl_ensemble
+import sklearn.model_selection as skl_model_select
 import time
 
 IMAGE_SIZE = 28
@@ -116,13 +117,25 @@ def train_with_adaboost(image_array, label_array):
     end = time.time()
     total_time = end - start
     print 'Classifier has been trained in time: {0:.3f} seconds'.format(total_time)
+    return classifier
+
+def test_with_adaboost(clf, image_array, label_array):
+    # Going to test and see how we do
+    scores = skl_model_select.cross_val_score(clf, image_array, label_array)
+    print 'Average score: {0:.3f}'.format(scores.mean())
 
 
 def main():
-    label1 = 'MNIST_data/t10k-images-idx3-ubyte.gz'
-    label2 = 'MNIST_data/t10k-labels-idx1-ubyte.gz'
-    image_array, label_array = recenter_and_get_data(label1, label2)
-    train_with_adaboost(image_array, label_array)
+    training_images_file = 'MNIST_data/train-images-idx3-ubyte.gz' 
+    training_labels_file = 'MNIST_data/train-labels-idx1-ubyte.gz'
+    image_array, label_array = recenter_and_get_data(training_images_file, training_labels_file)
+    clf = train_with_adaboost(image_array, label_array)
+
+    # Let's try prediction
+    testing_images_file = 'MNIST_data/t10k-images-idx3-ubyte.gz'
+    testing_labels_file = 'MNIST_data/t10k-labels-idx1-ubyte.gz'
+    image_array, label_array = recenter_and_get_data(testing_images_file, testing_labels_file)
+    test_with_adaboost(clf, image_array, label_array)
 
 
 ######################################################################
