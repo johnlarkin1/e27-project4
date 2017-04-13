@@ -12,6 +12,7 @@ import sklearn
 import tensorflow as tf
 import sklearn.ensemble as skl_ensemble
 import sklearn.model_selection as skl_model_select
+import sklearn.metrics as skl_metrics
 import time
 
 IMAGE_SIZE = 28
@@ -103,6 +104,12 @@ def recenter_and_get_data(image_file_name, label_file_name):
 
 ######################################################################
 # Classify using adaboost from sklearn 
+def print_pretty(title):
+    dec = 40
+    spacing = (dec - len(title))/2
+    print('='*dec)
+    print(' '*spacing + title + ' '*spacing)
+    print('='*dec)
 
 def train_with_adaboost(image_array, label_array):
     # Documentation:
@@ -111,18 +118,30 @@ def train_with_adaboost(image_array, label_array):
     # n_estimators - the max number of estimators at which boosting is terminated
     #                if it's a perfect fit, then we stop early
     classifier = skl_ensemble.AdaBoostClassifier(base_estimator = None, n_estimators = 100)
-    start = time.time()
+    print_pretty('AdaBoost Classifier Model')
     print 'Please wait. The AdaBoost classifier is being trained...'
-    classifier.fit(image_array, label_array)
-    end = time.time()
-    total_time = end - start
-    print 'Classifier has been trained in time: {0:.3f} seconds'.format(total_time)
+    for i in range(2):
+        print("\tAt training iteration: {}".format(i))
+        start = time.time()
+        score1 = classifier.fit(image_array, label_array).score(image_array, label_array)
+        score2 = classifier.score(image_array, label_array)
+        end = time.time()
+        total_time = end - start
+        print '\tClassifier has been trained in time: {0:.3f} seconds'.format(total_time)
+        print '\tClassifier training error: {0:.3f}% (should be the same as: {0:.3f}%)'.format(score1,score2)
     return classifier
 
 def test_with_adaboost(clf, image_array, label_array):
+    # Get our predicted labels so we can compare 
+    predicted_labels = clf.predict(image_array)
+
+    # Let's get our accuracy while testing
+    perc_error = skl_metrics.accuracy_score(label_array, predicted_labels)
+    print 'Test set error: {0:.3f}%'.format(perc_error)
+
     # Going to test and see how we do
     scores = skl_model_select.cross_val_score(clf, image_array, label_array)
-    print 'Average score: {0:.3f}'.format(scores.mean())
+    print 'Average cross val score: {0:.3f}%'.format(scores.mean())
 
 
 def main():
